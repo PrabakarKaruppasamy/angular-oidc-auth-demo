@@ -1,0 +1,205 @@
+<div class="dashboard fade-in">
+  <div class="page-header">
+    <div>
+      <h1>Auth Dashboard</h1>
+      <p>Inspect your OIDC tokens, roles, and live token expiry countdown</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="manualRefresh()" [disabled]="refreshing()">
+        <span class="spinner" style="width:14px;height:14px;border-width:2px;" *ngIf="refreshing()"></span>
+        <span class="material-icons sm" *ngIf="!refreshing()">refresh</span>
+        Silent Refresh
+      </button>
+      <span class="refresh-msg" *ngIf="refreshMsg()">{{ refreshMsg() }}</span>
+    </div>
+  </div>
+
+  <!-- Status Cards -->
+  <div class="status-grid">
+    <div class="status-card card">
+      <span class="material-icons lg text-success">verified_user</span>
+      <div>
+        <p class="stat-label">Auth Status</p>
+        <p class="stat-value text-success">Authenticated</p>
+      </div>
+    </div>
+    <div class="status-card card">
+      <span class="material-icons lg" style="color:var(--accent-orange)">timer</span>
+      <div>
+        <p class="stat-label">Token Expires In</p>
+        <p class="stat-value" [class]="(accessTokenInfo()?.timeToExpiry ?? '') === 'Expired' ? 'text-danger' : ''">
+          {{ accessTokenInfo()?.timeToExpiry ?? '—' }}
+        </p>
+      </div>
+    </div>
+    <div class="status-card card">
+      <span class="material-icons lg" style="color:var(--accent-purple)">manage_accounts</span>
+      <div>
+        <p class="stat-label">Assigned Roles</p>
+        <div class="roles-row">
+          <span *ngFor="let r of auth.user()?.roles" class="badge" [class]="'badge-' + r">{{ r }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="status-card card">
+      <span class="material-icons lg" style="color:var(--accent-teal)">key</span>
+      <div>
+        <p class="stat-label">Flow Used</p>
+        <p class="stat-value text-accent">PKCE / Code</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Token Inspector Tabs -->
+  <div class="card token-inspector">
+    <div class="tab-bar">
+      <button [class.active]="activeTab() === 'overview'" (click)="activeTab.set('overview')">
+        <span class="material-icons sm">dashboard</span> Overview
+      </button>
+      <button [class.active]="activeTab() === 'access'" (click)="activeTab.set('access')">
+        <span class="material-icons sm">security</span> Access Token
+      </button>
+      <button [class.active]="activeTab() === 'id'" (click)="activeTab.set('id')">
+        <span class="material-icons sm">badge</span> ID Token
+      </button>
+      <button [class.active]="activeTab() === 'refresh'" (click)="activeTab.set('refresh')">
+        <span class="material-icons sm">autorenew</span> Refresh Flow
+      </button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div class="tab-content" *ngIf="activeTab() === 'overview'">
+      <h3>User Claims</h3>
+      <div class="claims-grid" *ngIf="auth.user() as u">
+        <div class="claim-row"><span class="claim-key">sub</span><code>{{ u.sub }}</code></div>
+        <div class="claim-row"><span class="claim-key">email</span><code>{{ u.email }}</code></div>
+        <div class="claim-row"><span class="claim-key">name</span><code>{{ u.name }}</code></div>
+        <div class="claim-row"><span class="claim-key">username</span><code>{{ u.username }}</code></div>
+        <div class="claim-row">
+          <span class="claim-key">roles</span>
+          <div class="badges-row">
+            <span *ngFor="let r of u.roles" class="badge" [class]="'badge-' + r">{{ r }}</span>
+          </div>
+        </div>
+      </div>
+      <hr class="divider">
+      <h3>RBAC Gate Checks</h3>
+      <div class="rbac-grid">
+        <div class="rbac-row" *ngFor="let check of [
+          {label: 'isAuthenticated()', result: auth.isAuthenticated()},
+          {label: 'isAdmin()',         result: auth.isAdmin()},
+          {label: 'isManager()',       result: auth.isManager()},
+          {label: 'hasRole(\'user\')', result: auth.hasRole('user')}
+        ]">
+          <code class="rbac-fn">auth.{{ check.label }}</code>
+          <span class="rbac-result" [class]="check.result ? 'text-success' : 'text-danger'">
+            {{ check.result ? '✅ true' : '❌ false' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Access Token Tab -->
+    <div class="tab-content" *ngIf="activeTab() === 'access'">
+      <div class="token-header">
+        <h3>Access Token (JWT)</h3>
+        <div class="token-meta" *ngIf="accessTokenInfo() as info">
+          <span class="badge" [class]="info.isExpired ? 'badge-error' : 'badge-success'">
+            {{ info.isExpired ? 'Expired' : 'Valid' }}
+          </span>
+          <span class="text-muted" style="font-size:12px">Expires: {{ info.expiresAt | date:'HH:mm:ss' }}</span>
+        </div>
+      </div>
+      <div class="token-note">
+        ⚠️ Access tokens are opaque to the client in production — decoded here for learning purposes only.
+        Always validate signature via JWKS in your backend.
+      </div>
+      <p class="section-label">Decoded Payload</p>
+      <pre>{{ formatPayload(accessTokenInfo()) }}</pre>
+      <p class="section-label mt-4">Raw Token (truncated)</p>
+      <code class="raw-token">{{ (auth.state().accessToken ?? '') | slice:0:80 }}...</code>
+    </div>
+
+    <!-- ID Token Tab -->
+    <div class="tab-content" *ngIf="activeTab() === 'id'">
+      <div class="token-header">
+        <h3>ID Token (JWT)</h3>
+        <span class="badge badge-user">OpenID Connect</span>
+      </div>
+      <div class="token-note">
+        The ID token is for the client's use only — it contains user identity claims.
+        Never send the ID token to your API (use access_token instead).
+      </div>
+      <p class="section-label">Decoded Payload</p>
+      <pre>{{ formatPayload(idTokenInfo()) }}</pre>
+    </div>
+
+    <!-- Refresh Flow Tab -->
+    <div class="tab-content" *ngIf="activeTab() === 'refresh'">
+      <h3>Silent Token Refresh</h3>
+      <p class="tab-desc">
+        When the access token expires (or is about to), the app silently requests a new one
+        using the refresh token — without any user interaction.
+      </p>
+      <div class="refresh-flow">
+        <div class="flow-item" *ngFor="let step of [
+          {icon:'timer',         label:'Token Expiry Detected',    desc:'60 seconds before expiry, scheduler fires'},
+          {icon:'send',          label:'POST /token',               desc:'grant_type=refresh_token + refresh_token'},
+          {icon:'receipt',       label:'New Tokens Issued',         desc:'New access_token + id_token returned'},
+          {icon:'swap_horiz',    label:'State Updated',             desc:'Angular signals update all consumers reactively'},
+          {icon:'replay',        label:'Request Retried',           desc:'Any pending HTTP request retried with new token'}
+        ]">
+          <div class="flow-icon"><span class="material-icons">{{ step.icon }}</span></div>
+          <div>
+            <p class="flow-label">{{ step.label }}</p>
+            <p class="flow-desc">{{ step.desc }}</p>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary mt-4" (click)="manualRefresh()" [disabled]="refreshing()">
+        <span class="spinner" style="width:14px;height:14px;border-width:2px;" *ngIf="refreshing()"></span>
+        <span class="material-icons sm" *ngIf="!refreshing()">play_arrow</span>
+        Trigger Silent Refresh Now
+      </button>
+      <p class="refresh-msg" *ngIf="refreshMsg()" style="margin-top:12px; font-size:13px;">{{ refreshMsg() }}</p>
+    </div>
+  </div>
+
+  <!-- Role-based content demo -->
+  <div class="rbac-demo">
+    <h3>Role-Based Content Rendering</h3>
+    <p class="text-muted" style="font-size:13px; margin-bottom:16px;">
+      Content below is conditionally rendered based on your assigned roles.
+      Sign out and log in as a different role to see the difference.
+    </p>
+    <div class="rbac-cards">
+      <div class="rbac-card card rbac-user">
+        <div class="rbac-card-header">
+          <span class="material-icons">person</span>
+          <span>User Content</span>
+          <span class="badge badge-user">user</span>
+        </div>
+        <p>Visible to all authenticated users. Basic read-only access to dashboard data.</p>
+      </div>
+      <div class="rbac-card card rbac-manager" *ngIf="auth.isManager()">
+        <div class="rbac-card-header">
+          <span class="material-icons">supervisor_account</span>
+          <span>Manager Content</span>
+          <span class="badge badge-manager">manager+</span>
+        </div>
+        <p>Visible to managers and admins. Access to team reports and approval workflows.</p>
+      </div>
+      <div class="rbac-card card rbac-admin" *ngIf="auth.isAdmin()">
+        <div class="rbac-card-header">
+          <span class="material-icons">admin_panel_settings</span>
+          <span>Admin Content</span>
+          <span class="badge badge-admin">admin only</span>
+        </div>
+        <p>Visible to admins only. Full system configuration, user management, and audit logs.</p>
+        <a routerLink="/admin" class="btn btn-outline" style="margin-top:12px; font-size:12px;">
+          Go to Admin Panel →
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,82 @@
+.dashboard { display: flex; flex-direction: column; gap: 28px; }
+
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  h1 { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+  p  { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+}
+.header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.refresh-msg { font-size: 13px; }
+
+.status-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;
+  @media (max-width: 900px) { grid-template-columns: repeat(2,1fr); }
+  @media (max-width: 500px) { grid-template-columns: 1fr; }
+}
+
+.status-card {
+  display: flex; align-items: center; gap: 14px; padding: 18px;
+  .material-icons { flex-shrink: 0; }
+}
+.stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+.stat-value { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-top: 2px; }
+.roles-row  { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+
+/* Token Inspector */
+.token-inspector { overflow: hidden; }
+
+.tab-bar {
+  display: flex; border-bottom: 1px solid var(--border);
+  button {
+    display: flex; align-items: center; gap: 6px;
+    padding: 14px 20px; border: none; background: transparent;
+    font-size: 13px; font-weight: 600; color: var(--text-muted);
+    cursor: pointer; font-family: inherit; border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: all .2s;
+    &:hover { color: var(--text-primary); }
+    &.active { color: var(--accent); border-bottom-color: var(--accent); }
+  }
+}
+
+.tab-content {
+  padding: 24px;
+  h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; }
+}
+
+.tab-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
+
+.claims-grid { display: flex; flex-direction: column; gap: 10px; }
+.claim-row   { display: flex; align-items: center; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--border); &:last-child { border: none; } }
+.claim-key   { font-size: 12px; font-weight: 700; color: var(--accent); min-width: 100px; font-family: var(--mono); }
+.badges-row  { display: flex; gap: 6px; }
+
+.rbac-grid { display: flex; flex-direction: column; gap: 10px; }
+.rbac-row  { display: flex; align-items: center; gap: 16px; padding: 10px 14px; background: var(--bg-elevated); border-radius: var(--radius-sm); }
+.rbac-fn   { font-size: 13px; flex: 1; }
+.rbac-result { font-size: 13px; font-weight: 700; }
+
+.token-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; h3 { margin: 0; } }
+.token-meta   { display: flex; align-items: center; gap: 8px; }
+.section-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin: 16px 0 8px; }
+.raw-token { display: block; word-break: break-all; font-size: 11px; color: var(--accent-teal); }
+
+.token-note {
+  background: rgba(246,173,85,.08); border: 1px solid rgba(246,173,85,.2);
+  border-radius: var(--radius-sm); padding: 12px; font-size: 12px;
+  color: var(--accent-orange); margin-bottom: 16px; line-height: 1.6;
+}
+
+.refresh-flow { display: flex; flex-direction: column; gap: 12px; }
+.flow-item { display: flex; align-items: flex-start; gap: 14px; padding: 12px; background: var(--bg-elevated); border-radius: var(--radius-sm); }
+.flow-icon { width: 36px; height: 36px; background: rgba(74,144,217,.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent); }
+.flow-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.flow-desc  { font-size: 12px; color: var(--text-muted); font-family: var(--mono); margin-top: 2px; }
+
+/* RBAC Demo */
+.rbac-demo h3 { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.rbac-cards { display: flex; flex-direction: column; gap: 12px; }
+.rbac-card { padding: 18px; border-left: 3px solid var(--border); p { font-size: 13px; color: var(--text-secondary); margin-top: 8px; } }
+.rbac-card-header { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: var(--text-primary); .material-icons { font-size: 20px; } }
+.rbac-user    { border-left-color: var(--accent); }
+.rbac-manager { border-left-color: var(--accent-teal); }
+.rbac-admin   { border-left-color: var(--accent-purple); }

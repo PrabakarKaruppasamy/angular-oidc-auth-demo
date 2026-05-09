@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.angular/
+out-tsc/
+.env
+.DS_Store
+*.suo
+.idea/
+.vercel
+coverage
+.vscode

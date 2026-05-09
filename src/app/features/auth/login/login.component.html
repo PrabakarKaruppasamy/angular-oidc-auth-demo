@@ -1,0 +1,110 @@
+<div class="login-page">
+
+  <!-- Left: Login Form -->
+  <div class="login-panel card fade-in">
+    <div class="login-header">
+      <div class="lock-icon">🔐</div>
+      <h1>OIDC Auth Demo</h1>
+      <p>Angular 18 · PKCE · Token Refresh · RBAC</p>
+    </div>
+
+    <!-- Demo users -->
+    <div class="demo-section">
+      <p class="demo-label">Select Demo Account</p>
+      <div class="demo-grid">
+        <button
+          *ngFor="let u of demoUsers"
+          class="demo-card"
+          [style.borderColor]="u.color"
+          (click)="fillDemo(u.email, u.password)">
+          <span class="demo-role" [style.color]="u.color">{{ u.label }}</span>
+          <span class="demo-email">{{ u.email }}</span>
+          <span class="demo-scopes">{{ u.scopes }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="error-box" *ngIf="auth.error()">
+      <span class="material-icons sm">error_outline</span>
+      {{ auth.error() }}
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="field">
+        <label>Email</label>
+        <div class="input-wrap">
+          <span class="material-icons input-icon sm">alternate_email</span>
+          <input type="email" formControlName="email" placeholder="you@demo.com">
+        </div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="input-wrap">
+          <span class="material-icons input-icon sm">lock</span>
+          <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="••••••••">
+          <button type="button" class="eye-btn" (click)="showPassword.set(!showPassword())">
+            <span class="material-icons sm">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary submit-btn" [disabled]="form.invalid || auth.isLoading()">
+        <span class="spinner" *ngIf="auth.isLoading()"></span>
+        <span class="material-icons sm" *ngIf="!auth.isLoading()">login</span>
+        {{ auth.isLoading() ? 'Authenticating via OIDC...' : 'Sign In with OIDC' }}
+      </button>
+    </form>
+
+    <p class="built-by">Built by <strong>Prabakar Karuppasamy</strong> · Angular 18 · Generic OIDC</p>
+  </div>
+
+  <!-- Right: PKCE Flow Visualizer -->
+  <div class="pkce-panel">
+    <h2 class="panel-title">
+      <span class="material-icons">schema</span>
+      PKCE Authorization Code Flow
+    </h2>
+    <p class="panel-sub">Watch the real flow execute as you sign in →</p>
+
+    <div class="flow-steps">
+      <div
+        *ngFor="let step of pkceSteps; let i = index"
+        class="flow-step"
+        [class.active]="auth.pkceStep() === i + 1"
+        [class.done]="auth.pkceStep() > i + 1">
+        <div class="step-indicator">
+          <span class="material-icons" *ngIf="auth.pkceStep() <= i + 1">{{ step.icon }}</span>
+          <span class="material-icons check" *ngIf="auth.pkceStep() > i + 1">check_circle</span>
+        </div>
+        <div class="step-body">
+          <span class="step-label">{{ step.label }}</span>
+          <span class="step-desc">{{ step.desc }}</span>
+        </div>
+        <div class="step-connector" *ngIf="i < pkceSteps.length - 1"></div>
+      </div>
+    </div>
+
+    <!-- Live PKCE Data -->
+    <div class="pkce-data card" *ngIf="auth.pkceStep() > 0">
+      <p class="data-title">Live PKCE Values</p>
+      <div class="data-row" *ngFor="let entry of auth.pkceData() | keyvalue">
+        <span class="data-key">{{ entry.key }}</span>
+        <code class="data-val">{{ entry.value }}</code>
+      </div>
+    </div>
+
+    <!-- What is PKCE -->
+    <div class="info-box" *ngIf="auth.pkceStep() === 0">
+      <p class="info-title">Why PKCE for SPAs?</p>
+      <ul class="info-list">
+        <li>SPAs cannot store client secrets securely</li>
+        <li>PKCE prevents authorization code interception attacks</li>
+        <li>RFC 7636 — required by OAuth 2.1 for all public clients</li>
+        <li>Supported by Keycloak, Auth0, Okta, Azure AD, Google</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
